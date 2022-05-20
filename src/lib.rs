@@ -1,9 +1,19 @@
-pub fn my_flatten<I>(iter: I) -> Flatten<I::IntoIter>
+pub trait FlattenExt: Iterator + Sized {
+    fn flatten2(self) -> Flatten<Self>
+    where
+        Self::Item: IntoIterator;
+}
+
+impl<T> FlattenExt for T
 where
-    I: IntoIterator,
-    I::Item: IntoIterator,
+    T: Iterator,
 {
-    Flatten::new(iter.into_iter())
+    fn flatten2(self) -> Flatten<Self>
+    where
+        Self::Item: IntoIterator,
+    {
+        Flatten::new(self.into_iter())
+    }
 }
 
 pub struct Flatten<I>
@@ -53,35 +63,35 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::my_flatten;
+    use super::FlattenExt;
 
     #[test]
     fn empty() {
-        let iter: Vec<Vec<&str>> = vec![];
-        assert_eq!(my_flatten(iter).count(), 0);
+        let iter: std::vec::IntoIter<Vec<&str>> = vec![].into_iter();
+        assert_eq!(iter.flatten2().count(), 0);
     }
 
     #[test]
     fn empty_wide() {
-        let iter: Vec<Vec<&str>> = vec![vec![], vec![], vec![]];
-        assert_eq!(my_flatten(iter).count(), 0);
+        let iter: std::vec::IntoIter<Vec<&str>> = vec![vec![], vec![], vec![]].into_iter();
+        assert_eq!(iter.flatten2().count(), 0);
     }
 
     #[test]
     fn one() {
-        let iter = vec![vec!["a"]];
-        assert_eq!(my_flatten(iter).count(), 1);
+        let iter = vec![vec!["a"]].into_iter();
+        assert_eq!(iter.flatten2().count(), 1);
     }
 
     #[test]
     fn two() {
-        let iter = vec![vec!["a", "b"]];
-        assert_eq!(my_flatten(iter).count(), 2);
+        let iter = vec![vec!["a", "b"]].into_iter();
+        assert_eq!(iter.flatten2().count(), 2);
     }
 
     #[test]
     fn two_wide() {
-        let iter = vec![vec!["a"], vec!["b"]];
-        assert_eq!(my_flatten(iter).count(), 2);
+        let iter = vec![vec!["a"], vec!["b"]].into_iter();
+        assert_eq!(iter.flatten2().count(), 2);
     }
 }
