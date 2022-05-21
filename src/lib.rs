@@ -4,6 +4,28 @@ pub trait FlattenExt: Iterator + Sized {
         Self::Item: IntoIterator;
 }
 
+pub struct Flatten<T>
+where
+    T: Iterator,
+    T::Item: IntoIterator,
+{
+    outer_iter: T,
+    inner_iter: Option<<T::Item as IntoIterator>::IntoIter>,
+}
+
+impl<T> Flatten<T>
+where
+    T: Iterator,
+    T::Item: IntoIterator,
+{
+    pub fn new(iter: T) -> Self {
+        Flatten {
+            outer_iter: iter,
+            inner_iter: None,
+        }
+    }
+}
+
 impl<T> FlattenExt for T
 where
     T: Iterator,
@@ -12,51 +34,29 @@ where
     where
         Self::Item: IntoIterator,
     {
-        Flatten::new(self.into_iter())
+        Flatten::new(self)
     }
 }
 
-pub struct Flatten<I>
+impl<T> Iterator for Flatten<T>
 where
-    I: Iterator,
-    I::Item: IntoIterator,
+    T: Iterator,
+    T::Item: IntoIterator,
 {
-    outer: I,
-    inner: Option<<I::Item as IntoIterator>::IntoIter>,
-}
-
-impl<I> Flatten<I>
-where
-    I: Iterator,
-    I::Item: IntoIterator,
-{
-    pub fn new(iter: I) -> Self {
-        Flatten {
-            outer: iter,
-            inner: None,
-        }
-    }
-}
-
-impl<I> Iterator for Flatten<I>
-where
-    I: Iterator,
-    I::Item: IntoIterator,
-{
-    type Item = <I::Item as IntoIterator>::Item;
+    type Item = <T::Item as IntoIterator>::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if let Some(inner_iter) = self.inner.as_mut() {
-                if let Some(i) = inner_iter.into_iter().next() {
-                    return Some(i);
+            if let Some(inner_iter) = self.inner_iter.as_mut() {
+                if let Some(item) = inner_iter.into_iter().next() {
+                    return Some(item);
                 }
 
-                self.inner = None;
+                self.inner_iter = None;
             }
 
-            let next_inner_item = self.outer.next()?.into_iter();
-            self.inner = Some(next_inner_item);
+            let next_inner_iter = self.outer_iter.next()?.into_iter();
+            self.inner_iter = Some(next_inner_iter);
         }
     }
 }
