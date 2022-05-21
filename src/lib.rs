@@ -1,9 +1,3 @@
-pub trait FlattenExt: Iterator + Sized {
-    fn flatten2(self) -> Flatten<Self>
-    where
-        Self::Item: IntoIterator;
-}
-
 pub struct Flatten<T>
 where
     T: Iterator,
@@ -24,6 +18,12 @@ where
             inner_iter: None,
         }
     }
+}
+
+pub trait FlattenExt: Iterator + Sized {
+    fn flatten2(self) -> Flatten<Self>
+    where
+        Self::Item: IntoIterator;
 }
 
 impl<T> FlattenExt for T
@@ -48,11 +48,9 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             if let Some(inner_iter) = self.inner_iter.as_mut() {
-                if let Some(item) = inner_iter.into_iter().next() {
+                if let Some(item) = inner_iter.next() {
                     return Some(item);
                 }
-
-                self.inner_iter = None;
             }
 
             let next_inner_iter = self.outer_iter.next()?.into_iter();
