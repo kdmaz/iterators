@@ -12,7 +12,7 @@ where
     T: Iterator,
     T::Item: IntoIterator,
 {
-    pub fn new(iter: T) -> Self {
+    fn new(iter: T) -> Self {
         Flatten {
             outer_iter: iter,
             inner_iter: None,
