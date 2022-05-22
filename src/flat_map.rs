@@ -1,7 +1,7 @@
 use std::iter::Map;
 
 pub trait FlatMapExt: Iterator + Sized {
-    fn flat_map2<F, U>(self, f: F) -> FlatMap<Self, F, U>
+    fn flat_map2<F, U>(self, f: F) -> Flatten<Map<Self, F>>
     where
         U: IntoIterator,
         F: FnMut(Self::Item) -> U;
@@ -11,47 +11,12 @@ impl<T> FlatMapExt for T
 where
     T: Iterator,
 {
-    fn flat_map2<F, U>(self, f: F) -> FlatMap<Self, F, U>
+    fn flat_map2<F, U>(self, f: F) -> Flatten<Map<T, F>>
     where
         U: IntoIterator,
         F: FnMut(Self::Item) -> U,
     {
-        FlatMap::new(self, f)
-    }
-}
-
-pub struct FlatMap<T, F, U>
-where
-    T: Iterator,
-    U: IntoIterator,
-    F: FnMut(T::Item) -> U,
-{
-    inner: Flatten<Map<T, F>>,
-}
-
-impl<T, F, U> FlatMap<T, F, U>
-where
-    T: Iterator,
-    U: IntoIterator,
-    F: FnMut(T::Item) -> U,
-{
-    fn new(iter: T, f: F) -> FlatMap<T, F, U> {
-        FlatMap {
-            inner: Flatten::new(iter.map(f)),
-        }
-    }
-}
-
-impl<T, F, U> Iterator for FlatMap<T, F, U>
-where
-    T: Iterator,
-    U: IntoIterator,
-    F: FnMut(T::Item) -> U,
-{
-    type Item = U::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
+        Flatten::new(self.map(f))
     }
 }
 
