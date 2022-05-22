@@ -1,9 +1,10 @@
-use std::iter::Map;
-
-use crate::flatten::{Flatten, FlattenExt};
+use crate::{
+    flatten::{Flatten, FlattenExt},
+    map::{Map, MapExt},
+};
 
 pub trait FlatMapExt: Iterator + Sized {
-    fn flat_map2<F, U>(self, f: F) -> Flatten<Map<Self, F>>
+    fn flat_map2<F, U>(self, f: F) -> Flatten<Map<Self, F, U>>
     where
         U: IntoIterator,
         F: FnMut(Self::Item) -> U;
@@ -13,12 +14,12 @@ impl<T> FlatMapExt for T
 where
     T: Iterator,
 {
-    fn flat_map2<F, U>(self, f: F) -> Flatten<Map<T, F>>
+    fn flat_map2<F, U>(self, f: F) -> Flatten<Map<T, F, U>>
     where
         U: IntoIterator,
         F: FnMut(Self::Item) -> U,
     {
-        self.map(f).flatten2()
+        self.map2(f).flatten2()
     }
 }
 
