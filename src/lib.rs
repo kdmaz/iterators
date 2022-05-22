@@ -1,2 +1,3 @@
-mod flatten;
 mod flat_map;
+mod flatten;
+mod map;
