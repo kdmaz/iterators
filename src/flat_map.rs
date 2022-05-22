@@ -1,5 +1,7 @@
 use std::iter::Map;
 
+use crate::flatten::{Flatten, FlattenExt};
+
 pub trait FlatMapExt: Iterator + Sized {
     fn flat_map2<F, U>(self, f: F) -> Flatten<Map<Self, F>>
     where
@@ -16,50 +18,7 @@ where
         U: IntoIterator,
         F: FnMut(Self::Item) -> U,
     {
-        Flatten::new(self.map(f))
-    }
-}
-
-pub struct Flatten<T>
-where
-    T: Iterator,
-    T::Item: IntoIterator,
-{
-    outer_iter: T,
-    inner_iter: Option<<T::Item as IntoIterator>::IntoIter>,
-}
-
-impl<T> Flatten<T>
-where
-    T: Iterator,
-    T::Item: IntoIterator,
-{
-    pub fn new(iter: T) -> Self {
-        Flatten {
-            outer_iter: iter,
-            inner_iter: None,
-        }
-    }
-}
-
-impl<T> Iterator for Flatten<T>
-where
-    T: Iterator,
-    T::Item: IntoIterator,
-{
-    type Item = <T::Item as IntoIterator>::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if let Some(inner_iter) = self.inner_iter.as_mut() {
-                if let Some(item) = inner_iter.next() {
-                    return Some(item);
-                }
-            }
-
-            let next_inner_iter = self.outer_iter.next()?.into_iter();
-            self.inner_iter = Some(next_inner_iter);
-        }
+        self.map(f).flatten2()
     }
 }
 
